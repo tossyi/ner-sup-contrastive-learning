@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
+from torch.nn.utils.rnn import pad_sequence
+from datasets import load_dataset
 
 
 class NERDataset(Dataset):
@@ -23,6 +25,18 @@ class ContrastiveModel(nn.Module):
 
     def forward(self, x):
         return self.fc(x)
+
+
+# カスタムコラテ関数
+def collate_fn(batch):
+    texts, labels = zip(*batch)
+    texts = pad_sequence(
+        [torch.tensor(text) for text in texts], batch_first=True
+    )  # パディング
+    labels = pad_sequence(
+        [torch.tensor(label) for label in labels], batch_first=True
+    )  # パディング
+    return texts, labels
 
 
 def contrastive_loss(output1, output2, label, margin=1.0):
@@ -53,10 +67,6 @@ def contrastive_loss(output1, output2, label, margin=1.0):
     return loss
 
 
-# データの準備
-# Ontonotes5 dataset preparation
-from datasets import load_dataset
-
 # Load the Ontonotes5 dataset
 dataset = load_dataset("tner/ontonotes5")
 
@@ -70,10 +80,12 @@ labels = [
 
 print(texts[0])
 print(labels[0])
-exit
 
 dataset = NERDataset(texts, labels)
-dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
+
+
+# DataLoaderの作成時にカスタムコラテ関数を指定
+dataloader = DataLoader(dataset, batch_size=32, shuffle=True, collate_fn=collate_fn)
 
 # モデルの初期化
 model = ContrastiveModel(input_dim=768, output_dim=128)  # 例: BERTの出力次元
