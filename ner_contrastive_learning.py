@@ -60,9 +60,13 @@ from datasets import load_dataset
 # Load the Ontonotes5 dataset
 dataset = load_dataset("tner/ontonotes5")
 
+print(dataset)
+
 # Extract texts and labels from the dataset
-texts = [item['tokens'] for item in dataset['train']]  # Assuming 'train' split
-labels = [item['ner_tags'] for item in dataset['train']]  # Assuming 'ner_tags' contains the labels
+texts = [item["tokens"] for item in dataset["train"]]  # Assuming 'train' split
+labels = [
+    item["tags"] for item in dataset["train"]
+]  # Assuming 'ner_tags' contains the labels
 
 print(texts[0])
 print(labels[0])
@@ -84,5 +88,5 @@ for epoch in range(1):
         loss = contrastive_loss(output1, output2, label_batch)
         loss.backward()
         optimizer.step()
-        torch.save(model.state_dict(), f'model_epoch_{epoch}.pth')
-        print(f'Model saved after epoch {epoch}')
+        torch.save(model.state_dict(), f"model_epoch_{epoch}.pth")
+        print(f"Model saved after epoch {epoch}")
